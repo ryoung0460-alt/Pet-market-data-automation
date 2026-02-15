@@ -2,9 +2,8 @@ name: Monthly Dog Data Automation
 
 on:
   schedule:
-    # 매달 1일 오전 0시(한국 시간 오전 9시)에 자동 실행
     - cron: '0 0 1 * *'
-  workflow_dispatch: # 당신이 원할 때 언제든 수동으로 실행 가능하게 함
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -20,7 +19,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests beautifulsoup4 pandas
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 pandas lxml
 
       - name: Run Scraper
         run: python main.py
@@ -32,3 +32,4 @@ jobs:
           git add *.csv
           git commit -m "Auto-update: New dog market data" || exit 0
           git push
+
