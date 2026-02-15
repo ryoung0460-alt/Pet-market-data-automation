@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # 여기서 숫자가 1이면 에러가 납니다
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v4 # 여기서 숫자가 1이면 에러가 납니다
         with:
           python-version: '3.9'
 
