@@ -4,24 +4,27 @@ import json
 from datetime import datetime
 
 def update_google_sheet():
-    # 1. 깃허브 시크릿에서 JSON 키 로드
+    # 1. Load Credentials from GitHub Secrets
     creds_json = os.environ.get('GSPREAD_CREDENTIALS')
     if not creds_json:
-        print("Error: GSPREAD_CREDENTIALS not found.")
+        print("Error: GSPREAD_CREDENTIALS not found in environment.")
         return
 
     try:
         creds_dict = json.loads(creds_json)
-        # 2. 구글 시트 연결
+        # 2. Connect to Google Sheets
         client = gspread.service_account_from_dict(creds_dict)
-        # 시트 이름 확인
+        
+        # Open by name: Must match your file name 'pet-collector' exactly
         spreadsheet = client.open("pet-collector") 
-        sheet = spreadsheet.sheet1
+        
+        # Select the first tab (Worksheet) regardless of its name (시트1 or Sheet1)
+        sheet = spreadsheet.get_worksheet(0)
     except Exception as e:
-        print(f"Connection Error: {e}")
+        print(f"Connection/Auth Error: {e}")
         return
 
-    # 3. 데이터 준비
+    # 3. Prepare Data
     current_date = datetime.now().strftime("%Y-%m-%d")
     products = [
         ["Zesty Paws Probiotics", "$26.97", "Supplements"],
@@ -31,18 +34,17 @@ def update_google_sheet():
         ["PetHonesty Multivitamin", "$28.50", "Supplements"]
     ]
     
-    # 데이터를 리스트 형태로 정렬
     new_rows = []
     for p in products:
+        # Format: Date | Market | Category | Product Name | Price
         new_rows.append([current_date, "US_Pet_Market", p[2], p[0], p[1]])
     
     try:
-        # 핵심 변경 사항: insert_rows를 사용하여 2행(헤더 바로 아래)에 삽입
-        # 이렇게 하면 매일 최신 데이터가 가장 먼저 보입니다.
+        # 4. Insert rows at the top (Row 2, below header)
         sheet.insert_rows(new_rows, row=2)
-        print(f"Success: {len(new_rows)} rows inserted at the top of 'pet-collector'!")
+        print(f"Success: {len(new_rows)} rows inserted!")
     except Exception as e:
-        print(f"Write Error: {e}")
+        print(f"Data Write Error: {e}")
 
 if __name__ == "__main__":
     update_google_sheet()
