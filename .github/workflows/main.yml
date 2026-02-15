@@ -1,34 +1,23 @@
-name: Monthly Dog Data Automation
-
+name: DogDataAuto
 on:
-  schedule:
-    - cron: '0 0 1 * *'
-  workflow_dispatch: 
-
+  workflow_dispatch:
 jobs:
-  build:
+  run-task:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3  # 여기서 숫자가 1이면 에러가 납니다
-
-      - name: Set up Python
-        uses: actions/setup-python@v4 # 여기서 숫자가 1이면 에러가 납니다
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests beautifulsoup4 pandas lxml
-
-      - name: Run Scraper
+          python-version: '3.10'
+      - name: Install
+        run: pip install requests beautifulsoup4 pandas lxml
+      - name: Run
         run: python main.py
-
-      - name: Commit and Push
+      - name: Save
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git config --global user.name 'bot'
+          git config --global user.email 'bot@noreply.com'
           git add *.csv
-          git commit -m "Auto-update: New dog market data" || exit 0
+          git commit -m "Update" || exit 0
           git push
+
