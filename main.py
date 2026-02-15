@@ -4,47 +4,44 @@ import json
 from datetime import datetime
 
 def update_google_sheet():
-    # 1. Load Credentials from GitHub Secrets
+    # 1. Access Credentials
     creds_json = os.environ.get('GSPREAD_CREDENTIALS')
     if not creds_json:
-        print("Error: GSPREAD_CREDENTIALS not found in environment.")
+        print("Error: Credentials missing.")
         return
 
     try:
         creds_dict = json.loads(creds_json)
-        # 2. Connect to Google Sheets
         client = gspread.service_account_from_dict(creds_dict)
         
-        # Open by name: Must match your file name 'pet-collector' exactly
-        spreadsheet = client.open("pet-collector") 
+        # 2. Open Spreadsheet (Must match your file name exactly)
+        # We use 'Pet-collector' as you confirmed.
+        spreadsheet = client.open("Pet-collector") 
         
-        # Select the first tab (Worksheet) regardless of its name (시트1 or Sheet1)
+        # 3. Select the very first tab regardless of its name ('Pet-collector' or '시트1')
         sheet = spreadsheet.get_worksheet(0)
+        
+        print(f"Connected to sheet: {spreadsheet.title}")
     except Exception as e:
-        print(f"Connection/Auth Error: {e}")
+        print(f"Auth or Connection Error: {e}")
         return
 
-    # 3. Prepare Data
+    # 4. Data to insert
     current_date = datetime.now().strftime("%Y-%m-%d")
-    products = [
-        ["Zesty Paws Probiotics", "$26.97", "Supplements"],
-        ["Burt's Bees Shampoo", "$10.89", "Shampoo"],
-        ["Nutramax Dasuquin", "$65.99", "Supplements"],
-        ["Greenies Dental Treats", "$34.98", "Treats"],
-        ["PetHonesty Multivitamin", "$28.50", "Supplements"]
+    data_to_insert = [
+        [current_date, "US_Pet_Market", "Supplements", "Zesty Paws Probiotics", "$26.97"],
+        [current_date, "US_Pet_Market", "Shampoo", "Burt's Bees Shampoo", "$10.89"],
+        [current_date, "US_Pet_Market", "Supplements", "Nutramax Dasuquin", "$65.99"],
+        [current_date, "US_Pet_Market", "Treats", "Greenies Dental Treats", "$34.98"],
+        [current_date, "US_Pet_Market", "Supplements", "PetHonesty Multivitamin", "$28.50"]
     ]
     
-    new_rows = []
-    for p in products:
-        # Format: Date | Market | Category | Product Name | Price
-        new_rows.append([current_date, "US_Pet_Market", p[2], p[0], p[1]])
-    
     try:
-        # 4. Insert rows at the top (Row 2, below header)
-        sheet.insert_rows(new_rows, row=2)
-        print(f"Success: {len(new_rows)} rows inserted!")
+        # 5. Insert right below the header (Row 2)
+        sheet.insert_rows(data_to_insert, row=2)
+        print("Success: Data successfully pushed to Google Sheets!")
     except Exception as e:
-        print(f"Data Write Error: {e}")
+        print(f"Write Error: {e}")
 
 if __name__ == "__main__":
     update_google_sheet()
