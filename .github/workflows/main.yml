@@ -32,4 +32,3 @@ jobs:
           git add *.csv
           git commit -m "Auto-update: New dog market data" || exit 0
           git push
-
