@@ -3,46 +3,55 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime
 
-def scrape_ebay_dog_items():
-    # eBay 미국 반려견 용품 베스트셀러 검색 결과
-    url = "https://www.ebay.com/b/Dog-Supplies/1281/bn_1865464"
+def scrape_amazon_us():
+    url = "https://www.amazon.com/Best-Sellers-Pet-Supplies-Dog-Supplies/zgbs/pet-supplies/2975312011/"
     
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Referer": "https://www.google.com/",
     }
 
     try:
-        res = requests.get(url, headers=headers)
-        soup = BeautifulSoup(res.content, "html.parser")
-        products = []
-
-        # eBay 상품 리스트 태그 (최신 구조 반영)
-        items = soup.find_all('li', class_='s-item')
+        response = requests.get(url, headers=headers, timeout=30)
         
-        for item in items[1:16]: # 첫 번째 아이템은 보통 광고라 생략하고 15개 수집
+        if response.status_code != 200:
+            print(f"Status Error: {response.status_code}")
+            return
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        products = []
+        items = soup.select('div#gridItemRoot')
+
+        for item in items[:20]:
             try:
-                name = item.find('div', class_='s-item__title').text.strip()
-                price = item.find('span', class_='s-item__price').text.strip()
+                name_elem = item.select_one('.p13n-sc-truncate')
+                name = name_elem.text.strip() if name_elem else "N/A"
                 
-                products.append({
-                    "Date": datetime.now().strftime("%Y-%m-%d"),
-                    "Market": "eBay_US",
-                    "Product": name,
-                    "Price": price
-                })
-            except:
+                price_elem = item.select_one('.p13n-sc-price')
+                price = price_elem.text.strip() if price_elem else "N/A"
+
+                if name != "N/A":
+                    products.append({
+                        "Date": datetime.now().strftime("%Y-%m-%d"),
+                        "Market": "Amazon_US",
+                        "Product": name,
+                        "Price": price
+                    })
+            except Exception:
                 continue
 
         if products:
             df = pd.DataFrame(products)
-            df.to_csv("us_dog_market_data.csv", index=False, encoding='utf-8-sig')
-            print("🎉 Success: US Market data collected from eBay!")
+            df.to_csv("us_amazon_dog_data.csv", index=False, encoding='utf-8-sig')
+            print(f"Success: {len(products)} items saved.")
         else:
-            print("⚠️ Could not find items. Checking tags...")
+            print("No items found.")
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
-    scrape_ebay_dog_items()
+    scrape_amazon_us()
